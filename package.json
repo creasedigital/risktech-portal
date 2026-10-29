@@ -17,6 +17,15 @@
   "prisma": {
     "seed": "tsx prisma/seed.ts"
   },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@prisma/client",
+      "@prisma/engines",
+      "prisma",
+      "esbuild",
+      "sharp"
+    ]
+  },
   "dependencies": {
     "@prisma/client": "^6.19.3",
     "@tanstack/react-query": "^5.105.0",
