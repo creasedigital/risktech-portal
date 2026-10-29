@@ -35,6 +35,11 @@ jobs:
         uses: pnpm/action-setup@v4
         with:
           run_install: false
+          dest: ~/setup-pnpm
+          cache: false
+          cache_dependency_path: pnpm-lock.yaml
+          package_json_file: package.json
+          standalone: false
 
       - name: Get pnpm store directory
         shell: bash
@@ -47,7 +52,7 @@ jobs:
           path: ${{ env.STORE_PATH }}
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
-            ${ runner.os }}-pnpm-store-
+            ${{ runner.os }}-pnpm-store-
 
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
