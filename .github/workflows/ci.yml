@@ -15,21 +15,6 @@ jobs:
     name: Typecheck, Lint, Test & Build
     runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: postgres:15-alpine
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: risktech_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
     env:
       DATABASE_URL: "postgresql://neondb_owner:npg_0Il1kGLmDKOw@ep-cool-snow-b54ceq12-pooler.c-7.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
       APP_ENCRYPTION_KEY: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
