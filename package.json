@@ -33,7 +33,7 @@
     "clsx": "^2.1.1",
     "idb-keyval": "^6.3.0",
     "lucide-react": "^1.61.0",
-    "next": "15.2.0",
+    "next": "15.2.8",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-virtualized-auto-sizer": "^2.0.4",
