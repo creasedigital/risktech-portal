@@ -1,0 +1,203 @@
+// Prisma Schema for RiskTech & Advisory Executive Onboarding & Vetting Portal
+// Compatible with both SQLite (local dev) and PostgreSQL (production deployment)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// --- Users & Authentication ---
+
+model User {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  passwordHash String
+  role         Role       @default(EXECUTIVE)
+  totpSecret   String?    // AES-256-GCM encrypted
+  mfaEnabled   Boolean    @default(false)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  executive    Executive?
+  consultant   Consultant?
+  sessions     Session[]
+  auditLogs    AuditLog[] @relation("ActorLogs")
+  pushSubs     PushSubscription[]
+}
+
+enum Role {
+  EXECUTIVE
+  CONSULTANT
+  ADMINISTRATOR
+}
+
+// --- Executive Profile ---
+
+model Executive {
+  id                  String        @id @default(cuid())
+  userId              String        @unique
+  user                User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Step 1 — NDPA Consent
+  consentVersion      String
+  consentGrantedAt    DateTime
+  consentWithdrawnAt  DateTime?
+  marketingConsent    Boolean       @default(false)
+  dataProcessConsent  Boolean       // Mandatory for NDPA 2023 compliance
+
+  // Step 2 — Professional Profile (PII — encrypted at rest via AES-256-GCM)
+  fullNameEnc         String
+  phoneEnc            String
+  nationalityEnc      String
+  currentTitle        String
+  currentOrg          String
+
+  // Step 3 — Board Experience (JSON array of board positions)
+  boardExperience     Json          @default("[]")
+
+  // Step 4 — Sector & Qualifications (JSON arrays for SQLite compatibility)
+  sectors             Json          @default("[]")
+  qualifications      Json          @default("[]")
+
+  // Step 5 — Referees (PII — encrypted JSON array)
+  refereesEnc         String
+
+  // Step 6 — Documents
+  documents           Document[]
+
+  // Controlled Vetting FSM Workflow
+  vettingStatus       VettingStatus @default(DRAFT)
+  vettingNotes        VettingNote[]
+  submittedAt         DateTime?
+  verifiedAt          DateTime?
+  rejectedAt          DateTime?
+
+  // Optimistic Concurrency Control
+  version             Int           @default(0)
+
+  // Wizard draft progress
+  draftStep           Int           @default(1)
+  draftCompletedSteps Json          @default("[]")
+
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  @@index([vettingStatus])
+  @@index([currentOrg])
+}
+
+enum VettingStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  MORE_INFO_REQUIRED
+  VERIFIED
+  REJECTED
+}
+
+// --- Consultant Reviewer ---
+
+model Consultant {
+  id        String        @id @default(cuid())
+  userId    String        @unique
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notes     VettingNote[]
+  createdAt DateTime      @default(now())
+}
+
+// --- Vetting Notes ---
+
+model VettingNote {
+  id           String     @id @default(cuid())
+  executiveId  String
+  executive    Executive  @relation(fields: [executiveId], references: [id], onDelete: Cascade)
+  consultantId String
+  consultant   Consultant @relation(fields: [consultantId], references: [id], onDelete: Cascade)
+  content      String
+  isPublic     Boolean    @default(false) // Shown to executive if info requested
+  createdAt    DateTime   @default(now())
+
+  @@index([executiveId])
+  @@index([consultantId])
+}
+
+// --- Secure Documents ---
+
+model Document {
+  id           String       @id @default(cuid())
+  executiveId  String
+  executive    Executive    @relation(fields: [executiveId], references: [id], onDelete: Cascade)
+  type         DocumentType
+  originalName String
+  storagePath  String       // Server-only non-public path
+  mimeType     String
+  sizeBytes    Int
+  sha256       String       // Cryptographic checksum
+  uploadedAt   DateTime     @default(now())
+  uploadedById String
+
+  @@index([executiveId, type])
+}
+
+enum DocumentType {
+  CV
+  IDENTIFICATION
+  CERTIFICATION
+  OTHER
+}
+
+// --- Tamper-Evident Audit Log (Append-Only, SHA-256 Chained) ---
+
+model AuditLog {
+  sequence     Int      @id @default(autoincrement())
+  id           String   @unique @default(cuid())
+  actorId      String
+  actor        User     @relation("ActorLogs", fields: [actorId], references: [id])
+  actorRole    Role
+  action       String   // e.g., FSM_TRANSITION, DOCUMENT_UPLOAD, PII_REVEAL, AUDIT_VERIFY
+  targetType   String   // e.g., Executive, Document, User
+  targetId     String
+  metadataDiff Json     // Sanitized metadata diff
+  prevHash     String
+  entryHash    String   // SHA-256(prevHash + canonicalPayload)
+  createdAt    DateTime @default(now())
+
+  @@index([actorId])
+  @@index([targetId])
+  @@index([createdAt])
+}
+
+// --- Web Push Subscriptions ---
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  keys      Json     // { p256dh, auth }
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+// --- NextAuth Sessions ---
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expires      DateTime
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}

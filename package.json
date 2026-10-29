@@ -6,21 +6,61 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "storybook": "HOME=/tmp/sb_home STORYBOOK_DISABLE_TELEMETRY=1 storybook dev -p 6006",
+    "build-storybook": "HOME=/tmp/sb_home STORYBOOK_DISABLE_TELEMETRY=1 storybook build --disable-telemetry"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
-    "next": "16.4.3",
+    "@prisma/client": "^6.19.3",
+    "@tanstack/react-query": "^5.105.0",
+    "bcryptjs": "^3.0.3",
+    "clsx": "^2.1.1",
+    "idb-keyval": "^6.3.0",
+    "lucide-react": "^1.61.0",
+    "next": "15.2.0",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "react-virtualized-auto-sizer": "^2.0.4",
+    "react-window": "^2.5.0",
+    "tailwind-merge": "^3.7.0",
+    "zod": "^4.6.7",
+    "zustand": "^5.0.16"
   },
   "devDependencies": {
+    "@faker-js/faker": "^10.6.0",
+    "@storybook/addon-essentials": "8.6.14",
+    "@storybook/addon-interactions": "8.6.14",
+    "@storybook/nextjs": "8.6.14",
+    "@storybook/react": "8.6.14",
+    "@storybook/react-vite": "8.6.14",
+    "@tailwindcss/postcss": "^4.3.3",
     "@tailwindcss/turbopack": "^4",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.8",
+    "@types/bcryptjs": "^3.0.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^6.1.2",
+    "@vitest/coverage-v8": "^5.0.5",
     "eslint": "^9",
     "eslint-config-next": "16.4.3",
+    "jsdom": "^30.1.3",
+    "postcss": "^8.5.32",
+    "prisma": "^6.19.3",
+    "storybook": "8.6.14",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "tsx": "^4.23.15",
+    "typescript": "^5",
+    "vite": "^8.3.5",
+    "vitest": "^5.0.5"
   }
 }

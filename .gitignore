@@ -12,6 +12,14 @@
 
 # testing
 /coverage
+/storybook-static
+
+# uploads & sqlite database
+/uploads/
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
 
 # next.js
 /.next/

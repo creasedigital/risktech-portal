@@ -1,0 +1,76 @@
+name: RiskTech GRC CI Pipeline
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  audit-and-verify:
+    name: Typecheck, Lint, Test & Build
+    runs-on: ubuntu-latest
+
+    env:
+      DATABASE_URL: "file:./dev.db"
+      APP_ENCRYPTION_KEY: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+      NEXTAUTH_SECRET: "risktech-ci-testing-secret-32-chars-entropy"
+      NEXTAUTH_URL: "http://localhost:3000"
+      NODE_ENV: "test"
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Cache pnpm dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${ runner.os }}-pnpm-store-
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate & Push Prisma Schema
+        run: |
+          pnpm exec prisma validate
+          pnpm exec prisma db push
+
+      - name: Run Synthetic Seed Script
+        run: pnpm exec tsx prisma/seed.ts
+
+      - name: TypeScript Strict Check
+        run: pnpm typecheck
+
+      - name: Lint Check
+        run: pnpm lint
+
+      - name: Vitest & React Testing Library Suite
+        run: pnpm test
+
+      - name: Next.js Production Build
+        run: pnpm build
+
+      - name: Storybook Build
+        run: pnpm build-storybook
