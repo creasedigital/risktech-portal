@@ -34,6 +34,13 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
+          version: 9       
+          run_install: false
+          dest: ~/setup-pnpm
+          cache: false
+          cache_dependency_path: pnpm-lock.yaml
+          package_json_file: package.json
+          standalone: false
           run_install: false
 
       - name: Get pnpm store directory
