@@ -280,6 +280,8 @@ export default function ExecutiveOnboardingPage() {
               </div>
             </div>
 
+            <PushNotificationPrompt />
+
             {/* Stepper Navigation */}
             <nav aria-label="Progress" className="hidden sm:block">
               <ol className="flex items-center justify-between border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 p-3 shadow-xs">
