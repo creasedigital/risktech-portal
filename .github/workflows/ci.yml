@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      DATABASE_URL: "postgresql://neondb_owner:npg_0Il1kGLmDKOw@ep-cool-snow-b54ceq12-pooler.c-7.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
       APP_ENCRYPTION_KEY: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
       NEXTAUTH_SECRET: "risktech-ci-testing-secret-32-chars-entropy"
       NEXTAUTH_URL: "http://localhost:3000"
